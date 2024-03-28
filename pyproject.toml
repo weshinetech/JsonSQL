@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "jsonsql"
+version = "1.0.0"
+authors = [
+  { name="BigBrainTime", email="" },
+]
+description = "A way to accept SQL input with sanitization and paramaterization with a json format"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/BigBrainTime/"
+Issues = "https://github.com/BigBrainTime/"

@@ -8,7 +8,7 @@ version = "1.0.0"
 authors = [
   { name="BigBrainTime", email="" },
 ]
-description = "A way to accept SQL input with sanitization and paramaterization with a json format"
+description = "A way to accept SQL input with sanitization and parameterization with a json format"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
@@ -18,5 +18,5 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/BigBrainTime/"
-Issues = "https://github.com/BigBrainTime/"
+Homepage = "https://github.com/BigBrainTime/JsonSQL"
+Issues = "https://github.com/BigBrainTime/JsonSQL/issues"

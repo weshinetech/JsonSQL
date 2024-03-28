@@ -4,6 +4,12 @@ JsonSQL is a Python class that allows safe execution of SQL queries from untrust
 
 ## Usage
 
+### Installing the package
+
+```python
+pip install jsonsql
+```
+
 ### Full SQL String
 
 Import the JsonSQL class:

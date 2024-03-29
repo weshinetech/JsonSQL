@@ -6,24 +6,80 @@ class JsonSQL():
         self.ALLOWED_CONNECTIONS = allowed_connections
         self.ALLOWED_COLUMNS = allowed_columns
 
+        self.LOGICAL = ("AND", "OR")
+        self.COMPARISON = ("=", ">", "<", ">=", "<=", "<>","!=")
+        self.SPECIAL_COMPARISON = ("BETWEEN", "IN")
+
+    def is_special_comparison(self, comparator, value, valuetype):
+        def all_values_allowed(value, valuetype):
+            valid = True
+            for entry in value:
+                if not isinstance(entry, valuetype):
+                    valid = False
+                    break
+            return valid
+
+        if not isinstance(value, list) or not all_values_allowed(value, valuetype):
+            return False
+        
+        if comparator == "BETWEEN" and len(value) == 2:
+            return True
+
+        elif comparator == "IN":
+            return True
+        
+        return False
+
+    def is_valid_comparison(self, column:str, comparison:dict):
+        comparator = list(comparison)[0]
+
+        if comparator not in self.COMPARISON and comparator not in self.SPECIAL_COMPARISON:
+            return False
+        
+        value = comparison[comparator]
+        if isinstance(value, self.ALLOWED_COLUMNS[column]) or self.is_special_comparison(comparator, value, self.ALLOWED_COLUMNS[column]):
+            return True
+        return False
+
     def logic_parse(self, json_input: dict):
+
         if len(json_input) == 0:
             return False, "Nothing To Compute"
         
         value: str = list(json_input.keys())[0]
-        if value not in ("AND", "OR") and value not in self.ALLOWED_COLUMNS:
+        
+        if value not in self.ALLOWED_COLUMNS and value not in self.LOGICAL and value not in self.SPECIAL_COMPARISON and value not in self.COMPARISON:
             return False, f"Invalid Input - {value}"
         
-        elif value in ("AND", "OR") and not isinstance(json_input[value],list):
+        elif value in self.LOGICAL and not isinstance(json_input[value], list):
             return False, f"Bad {value}, non list"
 
-        elif value in self.ALLOWED_COLUMNS and not isinstance(json_input[value], self.ALLOWED_COLUMNS[value]):
+        elif (value in self.ALLOWED_COLUMNS and not self.is_valid_comparison(value,json_input[value])):
+            if isinstance(json_input[value],dict):
+                value0 = list(json_input[value])[0]
+                if value0 not in self.COMPARISON and value0 not in self.SPECIAL_COMPARISON:
+                    return False, f"Non Valid comparitor - {value0}"
             return False, f"Bad {value}, non {self.ALLOWED_COLUMNS[value]}"
 
-        if value in self.ALLOWED_COLUMNS and isinstance(json_input[value], self.ALLOWED_COLUMNS[value]):
-            return True, f"{value} = ?", json_input[value]
+        if self.is_valid_comparison(value, json_input[value]):
+            
+            comparator = list(json_input[value])[0]
+            if comparator in self.COMPARISON:
+                return True, f"{value} {comparator if comparator != '!=' else '<>'} ?", json_input[value][comparator]
+            
+            elif comparator in self.SPECIAL_COMPARISON:
+                if comparator == "BETWEEN":
+                    return True, f"{value} BETWEEN ? AND ?", tuple(json_input[value][comparator])
+
+                elif comparator == "IN":
+                    return True, f"{value} IN ({'?' if len(json_input[value][comparator]) == 1 else ('?,'*len(json_input[value][comparator]))[:-1]})", tuple(json_input[value][comparator])
+
+            return False, f"Comparitor Error - {comparator}"
         
-        elif value in ("AND", "OR") and isinstance(json_input[value],list):
+        elif value in self.ALLOWED_COLUMNS:
+            return True, f"{value} = ?", (json_input[value])
+        
+        elif value in self.LOGICAL and isinstance(json_input[value], list):
             if len(json_input[value]) < 2:
                 return False, "Invalid boolean length, must be >= 2"
             
@@ -70,9 +126,9 @@ class JsonSQL():
         if json_input["query"] not in self.ALLOWED_QUERIES:
             return False, f"Query not allowed - {json_input["query"]}"
 
-        for item in json_input["items"]:
-            if json_input["items"] not in self.ALLOWED_ITEMS:
-                return False, f"Item not allowed - {json_input["items"]}"
+        for item in range(len(json_input["items"])):
+            if json_input["items"][item] not in self.ALLOWED_ITEMS:
+                return False, f"Item not allowed - {json_input["items"][item]}"
                 
         if json_input["table"] not in self.ALLOWED_TABLES:
             return False, f"Table not allowed - {json_input['table']}"
@@ -87,6 +143,6 @@ class JsonSQL():
             if not logic_string[0]:
                 return False, f"Logic Fail - {logic_string[1]}"
             
-            return f"{sql_string} {json_input["connection"]} {logic_string[1]}", logic_string[2]
+            return True, f"{sql_string} {json_input["connection"]} {logic_string[1]}", logic_string[2]
         
         return sql_string

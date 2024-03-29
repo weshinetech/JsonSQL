@@ -20,14 +20,14 @@ class TestLogicParse(unittest.TestCase):
 
     def test_bad_column_type(self):
         jsonsql = JsonSQL([], [], [], [], {'col1': str})
-        input = {'col1': 123}
+        input = {'col1': {"=":123}}
         result, msg = jsonsql.logic_parse(input)
         self.assertFalse(result)
         self.assertEqual(msg, "Bad col1, non <class 'str'>")
 
     def test_valid_single_column(self):
         jsonsql = JsonSQL([], [], [], [], {'col1': str})
-        input = {'col1': 'value'}
+        input = {'col1': {"=":'value'}}
         result, sql, params = jsonsql.logic_parse(input)
         self.assertTrue(result)
         self.assertEqual(sql, "col1 = ?")
@@ -42,12 +42,75 @@ class TestLogicParse(unittest.TestCase):
 
     def test_valid_multi_condition(self):
         jsonsql = JsonSQL([], [], [], [], {'col1': str, 'col2': str})
-        input = {'AND': [{'col1': 'value1'}, {'col2': 'value2'}]}
+        input = {'AND': [{'col1': {"=":'value1'}}, {'col2': {"=":'value2'}}]}
         result, sql, params = jsonsql.logic_parse(input)
         self.assertTrue(result)
         self.assertEqual(sql, "(col1 = ? AND col2 = ?)")
         self.assertEqual(params, ('value1', 'value2'))
 
+    def test_valid_gt_comparison_condition(self):
+        jsonsql = JsonSQL([], [], [], [], {'col1': int}) 
+        input = {'col1': {'>': 10}}
+        result, sql, params = jsonsql.logic_parse(input)
+        self.assertTrue(result) 
+        self.assertEqual(sql, "col1 > ?")
+        self.assertEqual(params, 10)
+
+    def test_valid_lt_condition(self):
+        jsonsql = JsonSQL([], [], [], [], {'col1': int})
+        input = {'col1': {'<': 10}} 
+        result, sql, params = jsonsql.logic_parse(input)
+        self.assertTrue(result)
+        self.assertEqual(sql, "col1 < ?")
+        self.assertEqual(params, 10)
+
+    def test_valid_gte_condition(self):
+        jsonsql = JsonSQL([], [], [], [], {'col1': int}) 
+        input = {'col1': {'>=': 10}}
+        result, sql, params = jsonsql.logic_parse(input)
+        self.assertTrue(result)
+        self.assertEqual(sql, "col1 >= ?")
+        self.assertEqual(params, 10)
+
+    def test_valid_lte_condition(self):
+        jsonsql = JsonSQL([], [], [], [], {'col1': int})
+        input = {'col1': {'<=': 10}}
+        result, sql, params = jsonsql.logic_parse(input) 
+        self.assertTrue(result)
+        self.assertEqual(sql, "col1 <= ?") 
+        self.assertEqual(params, 10)
+
+    def test_valid_neq_condition(self):
+        jsonsql = JsonSQL([], [], [], [], {'col1': int})
+        input = {'col1': {'!=': 10}}
+        result, sql, params = jsonsql.logic_parse(input)
+        self.assertTrue(result)
+        self.assertEqual(sql, "col1 <> ?")
+        self.assertEqual(params, 10)
+
+    def test_invalid_operator(self):
+        jsonsql = JsonSQL([], [], [], [], {'col1': int})
+        input = {'col1': {'!': 10}}
+        result, msg = jsonsql.logic_parse(input)
+        self.assertFalse(result)
+        self.assertEqual(msg, "Non Valid comparitor - !")
+
+    def test_valid_between_condition(self):
+        jsonsql = JsonSQL([], [], [], [], {'col1': int})
+        input = {'col1': {'BETWEEN': [5, 10]}}
+        result, sql, params = jsonsql.logic_parse(input)
+        self.assertTrue(result)
+        self.assertEqual(sql, "col1 BETWEEN ? AND ?")
+        self.assertEqual(params, (5, 10))
+
+    def test_valid_in_condition(self):
+        jsonsql = JsonSQL([], [], [], [], {'col1': int})
+        input = {'col1': {'IN': [5, 10, 15]}}
+        result, sql, params = jsonsql.logic_parse(input)
+        self.assertTrue(result)
+        self.assertEqual(sql, "col1 IN (?,?,?)")
+        self.assertEqual(params, (5, 10, 15))
+      
 
 class TestSQLParse(unittest.TestCase):
 
@@ -72,7 +135,7 @@ class TestSQLParse(unittest.TestCase):
             'bad'], 'table': 'table1', 'connection': 'WHERE'}
         result, msg = jsonsql.sql_parse(input)
         self.assertFalse(result)
-        self.assertEqual(msg, "Item not allowed - ['bad']")
+        self.assertEqual(msg, "Item not allowed - bad")
 
     def test_bad_table(self):
         jsonsql = JsonSQL(['SELECT'], ['*'], ['table1'], ['WHERE'], {})

@@ -39,11 +39,11 @@ request = {
   "table": "users",
   "connection": "WHERE",
   "logic": {
-    "id": 123 
+    "id": {"=":123} 
   }
 }
 
-sql, params = jsonsql.sql_parse(request)
+valid, sql, params = jsonsql.sql_parse(request)
 ```
 
 The logic is validated against the allowed columns before constructing the final SQL string.
@@ -59,8 +59,8 @@ sql = "SELECT * FROM users WHERE"
 
 logic = {
   "AND": [
-     {"id": 123},
-     {"name": "John"}
+     {"id": {"=":123}},
+     {"name": {"=":"John"}}
   ]
 }
 
@@ -76,3 +76,15 @@ This validates the logic while allowing the SQL query itself to be predefined or
 The logic_parse method will return False if the input logic is invalid. Otherwise it returns the parsed logic string and any bound parameters for safe interpolation into a SQL query.
 
 All arguments to JsonSQL like allowed_queries, allowed_columns etc. are optional and can be empty lists or dicts if full validation of the SQL syntax is not needed.
+
+### Current operations supported by the logic
+
+```py
+logic = {
+  "AND":[]
+  "OR":[]
+  {"variable":{("<",">","=","etc"):"value"}}
+  {"variable":{"BETWEEN":["value1","value2"]}}
+  {"variable":{"IN":["value1","value2","..."]}}
+}
+```

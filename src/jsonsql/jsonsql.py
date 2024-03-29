@@ -10,7 +10,7 @@ class JsonSQL():
         self.COMPARISON = ("=", ">", "<", ">=", "<=", "<>","!=")
         self.SPECIAL_COMPARISON = ("BETWEEN", "IN")
 
-    def is_special_comparison(comparator, value, valuetype):
+    def is_special_comparison(self, comparator, value, valuetype):
         def all_values_allowed(value, valuetype):
             valid = True
             for entry in value:
@@ -19,26 +19,25 @@ class JsonSQL():
                     break
             return valid
 
-        if not isinstance(value, tuple):
+        if not isinstance(value, list) or not all_values_allowed(value, valuetype):
             return False
         
         if comparator == "BETWEEN" and len(value) == 2:
-            return all_values_allowed(value,valuetype)
+            return True
 
         elif comparator == "IN":
-            return all_values_allowed(value, valuetype)
+            return True
         
         return False
 
-    def is_valid_comparison(self, column, comparison:dict):
+    def is_valid_comparison(self, column:str, comparison:dict):
         comparator = list(comparison)[0]
 
         if comparator not in self.COMPARISON and comparator not in self.SPECIAL_COMPARISON:
             return False
         
         value = comparison[comparator]
-
-        if isinstance(value, self.ALLOWED_COLUMNS[column]) or self.is_special_comparison(value, self.ALLOWED_COLUMNS[column]):
+        if isinstance(value, self.ALLOWED_COLUMNS[column]) or self.is_special_comparison(comparator, value, self.ALLOWED_COLUMNS[column]):
             return True
         return False
 
@@ -68,7 +67,14 @@ class JsonSQL():
             if comparator in self.COMPARISON:
                 return True, f"{value} {comparator if comparator != '!=' else '<>'} ?", json_input[value][comparator]
             
-            return False, f"Non Valid comparitor - {comparator}"
+            elif comparator in self.SPECIAL_COMPARISON:
+                if comparator == "BETWEEN":
+                    return True, f"{value} BETWEEN ? AND ?", tuple(json_input[value][comparator])
+
+                elif comparator == "IN":
+                    return True, f"{value} IN ({'?' if len(json_input[value][comparator]) == 1 else ('?,'*len(json_input[value][comparator]))[:-1]})", tuple(json_input[value][comparator])
+
+            return False, f"Comparitor Error - {comparator}"
         
         elif value in self.ALLOWED_COLUMNS:
             return True, f"{value} = ?", (json_input[value])
@@ -137,6 +143,6 @@ class JsonSQL():
             if not logic_string[0]:
                 return False, f"Logic Fail - {logic_string[1]}"
             
-            return f"{sql_string} {json_input["connection"]} {logic_string[1]}", logic_string[2]
+            return True, f"{sql_string} {json_input["connection"]} {logic_string[1]}", logic_string[2]
         
         return sql_string

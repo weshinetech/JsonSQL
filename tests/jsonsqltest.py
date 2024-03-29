@@ -95,6 +95,23 @@ class TestLogicParse(unittest.TestCase):
         self.assertFalse(result)
         self.assertEqual(msg, "Non Valid comparitor - !")
 
+    def test_valid_between_condition(self):
+        jsonsql = JsonSQL([], [], [], [], {'col1': int})
+        input = {'col1': {'BETWEEN': [5, 10]}}
+        result, sql, params = jsonsql.logic_parse(input)
+        self.assertTrue(result)
+        self.assertEqual(sql, "col1 BETWEEN ? AND ?")
+        self.assertEqual(params, (5, 10))
+
+    def test_valid_in_condition(self):
+        jsonsql = JsonSQL([], [], [], [], {'col1': int})
+        input = {'col1': {'IN': [5, 10, 15]}}
+        result, sql, params = jsonsql.logic_parse(input)
+        self.assertTrue(result)
+        self.assertEqual(sql, "col1 IN (?,?,?)")
+        self.assertEqual(params, (5, 10, 15))
+      
+
 class TestSQLParse(unittest.TestCase):
 
     def test_missing_argument(self):

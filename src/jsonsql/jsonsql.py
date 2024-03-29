@@ -48,23 +48,30 @@ class JsonSQL():
             return False, "Nothing To Compute"
         
         value: str = list(json_input.keys())[0]
-
+        
         if value not in self.ALLOWED_COLUMNS and value not in self.LOGICAL and value not in self.SPECIAL_COMPARISON and value not in self.COMPARISON:
             return False, f"Invalid Input - {value}"
         
         elif value in self.LOGICAL and not isinstance(json_input[value], list):
             return False, f"Bad {value}, non list"
 
-        elif (value in self.COMPARISON and not isinstance(value, json_input[value])) or (value in self.SPECIAL_COMPARISON and not self.is_valid_comparison(value, json_input[value])):
+        elif (value in self.ALLOWED_COLUMNS and not self.is_valid_comparison(value,json_input[value])):
+            if isinstance(json_input[value],dict):
+                value0 = list(json_input[value])[0]
+                if value0 not in self.COMPARISON and value0 not in self.SPECIAL_COMPARISON:
+                    return False, f"Non Valid comparitor - {value0}"
             return False, f"Bad {value}, non {self.ALLOWED_COLUMNS[value]}"
 
         if self.is_valid_comparison(value, json_input[value]):
             
             comparator = list(json_input[value])[0]
             if comparator in self.COMPARISON:
-                return True, f"{value} {comparator if comparator != "!=" else "<>"} ?", json_input[value][comparator]
+                return True, f"{value} {comparator if comparator != '!=' else '<>'} ?", json_input[value][comparator]
             
             return False, f"Non Valid comparitor - {comparator}"
+        
+        elif value in self.ALLOWED_COLUMNS:
+            return True, f"{value} = ?", (json_input[value])
         
         elif value in self.LOGICAL and isinstance(json_input[value], list):
             if len(json_input[value]) < 2:
@@ -74,7 +81,6 @@ class JsonSQL():
             safe = (True, "")
             for case in json_input[value]:
                 evaluation = self.logic_parse(case)
-                print(evaluation)
                 if not evaluation[0]:
                     safe = evaluation
                     break

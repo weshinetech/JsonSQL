@@ -10,9 +10,10 @@ if __name__ == "__main__":
             "AND": [
                 {"creature": "owlbear"},
                 {"OR": [
-                    {"userID": 555},
-                    {"userID": 111}
-                ]}
+                    {"userID": {"<=":555}},
+                    {"userID": {"=":111}},
+                    #{"userID":{"BETWEEN":(1000,2000)}}
+                ]},
             ]}
     }
 

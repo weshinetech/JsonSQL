@@ -209,6 +209,14 @@ class TestSQLParse(unittest.TestCase):
         self.assertEqual(sql, "SELECT * FROM table1 WHERE col1 <= ?")
         self.assertEqual(params, (2,))
 
+    def test_valid_sql_without_logic_with_aggregate_table(self):
+        jsonsql = JsonSQL(['SELECT'], ['column'], ['table1'], [], {})
+        input = {'query': 'SELECT', 'items': [{"MIN":'column'}], 'table': "table1"}
+        result, sql, params = jsonsql.sql_parse(input)
+        self.assertTrue(result)
+        self.assertEqual(sql, "SELECT MIN(column) FROM table1")
+        self.assertEqual(params, ())
+
 
 if __name__ == "__main__":
     unittest.main()

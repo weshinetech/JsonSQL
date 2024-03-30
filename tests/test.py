@@ -24,7 +24,7 @@ request2 = {
     "AND": [
         {"creature": {"=": "owlbear"}},
         {"ranking": {">": 0}},
-        {"ranking": {"=": "votes"}}
+        {"ranking": {"=": "votes"}},
     ]
 }
 
@@ -55,5 +55,5 @@ allowed_columns = {
 jsonsql_ = JsonSQL(allowed_queries, allowed_items,
                     allowed_tables, allowed_connections, allowed_columns)
 
-#print(jsonsql_.sql_parse(request))
+print(jsonsql_.sql_parse(request))
 print(jsonsql_.logic_parse(request2))

@@ -54,7 +54,7 @@ class JsonSQL():
                     break
             return valid
 
-        if not isinstance(value, list) or not all_values_allowed(value, valuetype) or not self.is_another_column(value):
+        if (not isinstance(value, list) and not self.is_another_column(value)) or not all_values_allowed(value, valuetype):
             return False
         
         if comparator == "BETWEEN" and len(value) == 2:
@@ -84,7 +84,7 @@ class JsonSQL():
             return False
         
         value = comparison[comparator]
-        if self.is_another_column(value) or isinstance(value, self.ALLOWED_COLUMNS[column]) or self.is_special_comparison(comparator, value, self.ALLOWED_COLUMNS[column]):
+        if (not isinstance(value, list) and self.is_another_column(value)) or isinstance(value, self.ALLOWED_COLUMNS[column]) or self.is_special_comparison(comparator, value, self.ALLOWED_COLUMNS[column]):
             return True
         return False
 

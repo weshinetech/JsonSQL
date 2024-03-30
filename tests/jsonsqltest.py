@@ -111,6 +111,54 @@ class TestLogicParse(unittest.TestCase):
         self.assertEqual(sql, "col1 IN (?,?,?)")
         self.assertEqual(params, (5, 10, 15))
       
+    def test_valid_eq_condition_column(self):
+        jsonsql = JsonSQL([], [], [], [], {'col1': int, 'col2': int})
+        input = {'col1': {'=': 'col2'}}
+        result, sql, params = jsonsql.logic_parse(input)
+        self.assertTrue(result)
+        self.assertEqual(sql, "col1 = col2")
+        self.assertEqual(params, ())
+
+    def test_valid_gt_condition_column(self):
+        jsonsql = JsonSQL([], [], [], [], {'col1': int, 'col2': int})
+        input = {'col1': {'>': 'col2'}}
+        result, sql, params = jsonsql.logic_parse(input)
+        self.assertTrue(result)
+        self.assertEqual(sql, "col1 > col2")
+        self.assertEqual(params, ())
+
+    def test_valid_lt_condition_column(self):
+        jsonsql = JsonSQL([], [], [], [], {'col1': int, 'col2': int}) 
+        input = {'col1': {'<': 'col2'}}
+        result, sql, params = jsonsql.logic_parse(input)
+        self.assertTrue(result)
+        self.assertEqual(sql, "col1 < col2")
+        self.assertEqual(params, ())
+
+    def test_valid_gte_condition_column(self):
+        jsonsql = JsonSQL([], [], [], [], {'col1': int, 'col2': int})
+        input = {'col1': {'>=': 'col2'}}
+        result, sql, params = jsonsql.logic_parse(input)
+        self.assertTrue(result)
+        self.assertEqual(sql, "col1 >= col2")
+        self.assertEqual(params, ())
+
+    def test_valid_lte_condition_column(self):
+        jsonsql = JsonSQL([], [], [], [], {'col1': int, 'col2': int})
+        input = {'col1': {'<=': 'col2'}}
+        result, sql, params = jsonsql.logic_parse(input)
+        self.assertTrue(result)
+        self.assertEqual(sql, "col1 <= col2")
+        self.assertEqual(params, ())
+
+    def test_valid_neq_condition_column(self):
+        jsonsql = JsonSQL([], [], [], [], {'col1': int, 'col2': int})
+        input = {'col1': {'!=': 'col2'}}
+        result, sql, params = jsonsql.logic_parse(input)
+        self.assertTrue(result)
+        self.assertEqual(sql, "col1 <> col2")
+        self.assertEqual(params, ())
+      
 
 class TestSQLParse(unittest.TestCase):
 

@@ -1,49 +1,59 @@
 from jsonsql import JsonSQL
 
-if __name__ == "__main__":
-    request = {
-        "query": "SELECT",
-        "items": ["*"],
-        "table": "images",
-        "connection": "WHERE",
-        "logic": {
-            "AND": [
-                {"creature": {"=": "owlbear"}},
-                {"OR": [
-                    {"userID": {"<=": 555}},
-                    {"userID": {"=": 111}},
-                    {"AND": [
-                        {"userID": {"=": 1111}},
-                        {"imageID": {"=": "imageIDString"}}
-                    ]},
-                    {"userID": {"BETWEEN": [1000, 2000]}}
+request = {
+    "query": "SELECT",
+    "items": ["*"],
+    "table": "images",
+    "connection": "WHERE",
+    "logic": {
+        "AND": [
+            {"creature": {"=": "owlbear"}},
+            {"OR": [
+                {"userID": {"<=": 555}},
+                {"userID": {"=": 111}},
+                {"AND": [
+                    {"userID": {"=": 1111}},
+                    {"imageID": {"=": "imageIDString"}}
                 ]},
-            ]}
-    }
+                {"userID": {"BETWEEN": [1000, 2000]}}
+            ]},
+        ]}
+}
 
-    allowed_queries = [
-        "SELECT"
+request2 = {
+    "AND": [
+        {"creature": {"=": "owlbear"}},
+        {"ranking": {">": 0}},
+        {"ranking": {"=": "votes"}}
     ]
+}
 
-    allowed_items = [
-        "*"
-    ]
+allowed_queries = [
+    "SELECT"
+]
 
-    allowed_connections = [
-        "WHERE"
-    ]
+allowed_items = [
+    "*"
+]
 
-    allowed_tables = [
-        "images"
-    ]
+allowed_connections = [
+    "WHERE"
+]
 
-    allowed_columns = {
-        "creature": str,
-        "userID": int,
-        "imageID":str
-    }
+allowed_tables = [
+    "images"
+]
 
-    jsonsql_ = JsonSQL(allowed_queries, allowed_items,
-                       allowed_tables, allowed_connections, allowed_columns)
+allowed_columns = {
+    "creature": str,
+    "userID": int,
+    "imageID":str,
+    "ranking":int,
+    "votes":int
+}
 
-    print(jsonsql_.sql_parse(request))
+jsonsql_ = JsonSQL(allowed_queries, allowed_items,
+                    allowed_tables, allowed_connections, allowed_columns)
+
+#print(jsonsql_.sql_parse(request))
+print(jsonsql_.logic_parse(request2))

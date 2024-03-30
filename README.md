@@ -79,18 +79,18 @@ All arguments to JsonSQL like allowed_queries, allowed_columns etc. are optional
 
 ### Current operations supported by the logic
 
-```py
-logic = {
-  "AND":[]
-  "OR":[]
-  {"variable":{("<",">","=","etc"):"value"}}
-  {"variable":{"BETWEEN":["value1","value2"]}}
+```json
+{
+  "AND":[],
+  "OR":[],
+  {"variable":{("<",">","=","etc"):"value"}},
+  {"variable":{"BETWEEN":["value1","value2"]}},
   {"variable":{"IN":["value1","value2","..."]}}
 }
 ```
 
 values can also be valid variables such that `variable1 = variable2`
 
-```py
+```json
 {"variable":{"=":"othervariable"}}
 ```

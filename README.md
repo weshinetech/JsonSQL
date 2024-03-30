@@ -83,7 +83,7 @@ All arguments to JsonSQL like allowed_queries, allowed_columns etc. are optional
 {
   "AND":[],
   "OR":[],
-  {"variable":{("<",">","=","etc"):"value"}},
+  {"variable":{"<, >, =, etc":"value"}},
   {"variable":{"BETWEEN":["value1","value2"]}},
   {"variable":{"IN":["value1","value2","..."]}}
 }

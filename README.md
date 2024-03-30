@@ -88,3 +88,9 @@ logic = {
   {"variable":{"IN":["value1","value2","..."]}}
 }
 ```
+
+values can also be valid variables such that `variable1 = variable2`
+
+```py
+{"variable":{"=":"othervariable"}}
+```

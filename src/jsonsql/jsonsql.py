@@ -1,5 +1,15 @@
 class JsonSQL():
     def __init__(self, allowed_queries: list=[], allowed_items: list=[], allowed_tables: list=[], allowed_connections: list=[], allowed_columns: dict={}):
+        """Initializes JsonSQL instance with allowed queries, items, tables, 
+        connections, and columns.
+        
+        Args:
+        allowed_queries (list): Allowed SQL query strings. 
+        allowed_items (list): Allowed SQL SELECT fields.
+        allowed_tables (list): Allowed SQL FROM tables.
+        allowed_connections (list): Allowed SQL JOIN conditions.
+        allowed_columns (dict): Allowed columns per table.
+        """
         self.ALLOWED_QUERIES = allowed_queries
         self.ALLOWED_ITEMS = allowed_items
         self.ALLOWED_TABLES = allowed_tables
@@ -10,39 +20,75 @@ class JsonSQL():
         self.COMPARISON = ("=", ">", "<", ">=", "<=", "<>","!=")
         self.SPECIAL_COMPARISON = ("BETWEEN", "IN")
 
-    def is_special_comparison(self, comparator, value, valuetype):
+    def is_another_column(self, value:str):
+        return value in self.ALLOWED_COLUMNS
+
+    def is_special_comparison(self, comparator:str, value, valuetype):
+        """Checks if a comparator and value match the special comparison operators.
+    
+        Special comparison operators include BETWEEN and IN. This checks if the 
+        comparator is one of those, and if the value matches the expected format.
+        
+        Args:
+            comparator (str): The comparison operator.
+            value: The comparison value.
+            valuetype: The expected type of the comparison value.
+        
+        Returns:
+            bool: True if it is a valid special comparison, False otherwise.
+        """
         def all_values_allowed(value, valuetype):
+            """Checks if all values in a list are of the specified type.
+        
+            Args:
+                value (list): The list of values to check.
+                valuetype: The expected type of each value.
+            
+            Returns:
+                bool: True if all values match the expected type, False otherwise.
+            """
             valid = True
             for entry in value:
-                if not isinstance(entry, valuetype):
+                if not isinstance(entry, valuetype) and not self.is_another_column(entry):
                     valid = False
                     break
             return valid
 
-        if not isinstance(value, list) or not all_values_allowed(value, valuetype):
+        if (not isinstance(value, list) and not self.is_another_column(value)) or not all_values_allowed(value, valuetype):
             return False
         
         if comparator == "BETWEEN" and len(value) == 2:
             return True
 
-        elif comparator == "IN":
+        elif comparator == "IN" and len(value) > 0:
             return True
         
         return False
 
     def is_valid_comparison(self, column:str, comparison:dict):
+        """Checks if a comparison operator and value are valid for a column.
+        
+        Validates that the comparator is a valid operator, and the value is the 
+        expected type for the column or a valid special comparison.
+        
+        Args:
+            column (str): The column name.
+            comparison (dict): The comparison operator and value.
+        
+        Returns:
+            bool: True if the comparison is valid, False otherwise.
+        """
         comparator = list(comparison)[0]
 
         if comparator not in self.COMPARISON and comparator not in self.SPECIAL_COMPARISON:
             return False
         
         value = comparison[comparator]
-        if isinstance(value, self.ALLOWED_COLUMNS[column]) or self.is_special_comparison(comparator, value, self.ALLOWED_COLUMNS[column]):
+        if (not isinstance(value, list) and self.is_another_column(value)) or isinstance(value, self.ALLOWED_COLUMNS[column]) or self.is_special_comparison(comparator, value, self.ALLOWED_COLUMNS[column]):
             return True
         return False
 
     def logic_parse(self, json_input: dict):
-
         if len(json_input) == 0:
             return False, "Nothing To Compute"
         
@@ -64,8 +110,11 @@ class JsonSQL():
         if self.is_valid_comparison(value, json_input[value]):
             
             comparator = list(json_input[value])[0]
-            if comparator in self.COMPARISON:
+            if comparator in self.COMPARISON and not self.is_another_column(json_input[value][comparator]):
                 return True, f"{value} {comparator if comparator != '!=' else '<>'} ?", json_input[value][comparator]
+            
+            elif comparator in self.COMPARISON and self.is_another_column(json_input[value][comparator]):
+                return True, f"{value} {comparator if comparator != '!=' else '<>'} {json_input[value][comparator]}", ()
             
             elif comparator in self.SPECIAL_COMPARISON:
                 if comparator == "BETWEEN":
@@ -75,9 +124,6 @@ class JsonSQL():
                     return True, f"{value} IN ({'?' if len(json_input[value][comparator]) == 1 else ('?,'*len(json_input[value][comparator]))[:-1]})", tuple(json_input[value][comparator])
 
             return False, f"Comparitor Error - {comparator}"
-        
-        elif value in self.ALLOWED_COLUMNS:
-            return True, f"{value} = ?", (json_input[value])
         
         elif value in self.LOGICAL and isinstance(json_input[value], list):
             if len(json_input[value]) < 2:

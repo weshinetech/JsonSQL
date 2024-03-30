@@ -23,17 +23,32 @@ class JsonSQL():
         self.SPECIAL_COMPARISON = ("BETWEEN", "IN")
         self.AGGREGATES = ("MIN", "MAX","SUM","AVG","COUNT")
 
+    def make_aggregate(self, aggregate:dict, param:bool=False) -> tuple[str, any]:
+        return f"{list(aggregate)[0]}({aggregate[list(aggregate)[0]] if not param else "?"})", aggregate[list(aggregate)[0]]
+
     def is_another_column(self, value:str) -> bool:
         return value in self.ALLOWED_COLUMNS
     
-    def is_valid_aggregate(self, aggregate:dict, valuetype) -> bool:
+    def is_valid_aggregate(self, aggregate:dict, valuetype:any) -> bool:
+        if not isinstance(aggregate, dict):
+            return False
+        
         operation = list(aggregate)[0]
         value = aggregate[operation]
         if operation not in self.AGGREGATES:
             return False
         
-        if not self.is_another_column(value) and True:
-            pass
+        if not self.is_another_column(value) and not isinstance(value,valuetype):
+            return False
+        
+        return True
+    
+    def is_valid_value(self, value:any, valuetype:any) -> bool:
+        if isinstance(value, dict):
+            return self.is_valid_aggregate(value,valuetype)
+        elif not isinstance(value, list) and self.is_another_column(value):
+            return True
+        return isinstance(value, valuetype)
 
     def is_special_comparison(self, comparator:str, value: any, valuetype: any) -> bool:
         """Checks if a comparator and value match the special comparison operators.
@@ -61,12 +76,12 @@ class JsonSQL():
             """
             valid = True
             for entry in value:
-                if not isinstance(entry, valuetype) and not self.is_another_column(entry):
+                if not self.is_valid_value(entry,valuetype):
                     valid = False
                     break
             return valid
 
-        if (not isinstance(value, list) and not self.is_another_column(value)) or not all_values_allowed(value, valuetype):
+        if not isinstance(value, list) or not all_values_allowed(value, valuetype):
             return False
         
         if comparator == "BETWEEN" and len(value) == 2:
@@ -96,7 +111,7 @@ class JsonSQL():
             return False
         
         value = comparison[comparator]
-        if (not isinstance(value, list) and self.is_another_column(value)) or isinstance(value, self.ALLOWED_COLUMNS[column]) or self.is_special_comparison(comparator, value, self.ALLOWED_COLUMNS[column]):
+        if self.is_valid_value(value, self.ALLOWED_COLUMNS[column]) or self.is_special_comparison(comparator, value, self.ALLOWED_COLUMNS[column]):
             return True
         return False
 
@@ -124,10 +139,13 @@ class JsonSQL():
             comparator = list(json_input[value])[0]
             if comparator in self.COMPARISON and not self.is_another_column(json_input[value][comparator]):
                 return True, f"{value} {comparator if comparator != '!=' else '<>'} ?", json_input[value][comparator] if isinstance(json_input[value][comparator], tuple) else (json_input[value][comparator],)
-            
+
             elif comparator in self.COMPARISON and self.is_another_column(json_input[value][comparator]):
                 return True, f"{value} {comparator if comparator != '!=' else '<>'} {json_input[value][comparator]}", ()
             
+            elif not self.is_valid_aggregate(json_input[value][comparator],self.ALLOWED_COLUMNS[value]):
+                pass
+
             elif comparator in self.SPECIAL_COMPARISON:
                 if comparator == "BETWEEN":
                     return True, f"{value} BETWEEN ? AND ?", tuple(json_input[value][comparator])

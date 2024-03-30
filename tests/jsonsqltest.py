@@ -31,7 +31,7 @@ class TestLogicParse(unittest.TestCase):
         result, sql, params = jsonsql.logic_parse(input)
         self.assertTrue(result)
         self.assertEqual(sql, "col1 = ?")
-        self.assertEqual(params, 'value')
+        self.assertEqual(params, ('value',))
 
     def test_invalid_boolean_len(self):
         jsonsql = JsonSQL([], [], [], [], {})
@@ -54,7 +54,7 @@ class TestLogicParse(unittest.TestCase):
         result, sql, params = jsonsql.logic_parse(input)
         self.assertTrue(result) 
         self.assertEqual(sql, "col1 > ?")
-        self.assertEqual(params, 10)
+        self.assertEqual(params, (10,))
 
     def test_valid_lt_condition(self):
         jsonsql = JsonSQL([], [], [], [], {'col1': int})
@@ -62,7 +62,7 @@ class TestLogicParse(unittest.TestCase):
         result, sql, params = jsonsql.logic_parse(input)
         self.assertTrue(result)
         self.assertEqual(sql, "col1 < ?")
-        self.assertEqual(params, 10)
+        self.assertEqual(params, (10,))
 
     def test_valid_gte_condition(self):
         jsonsql = JsonSQL([], [], [], [], {'col1': int}) 
@@ -70,7 +70,7 @@ class TestLogicParse(unittest.TestCase):
         result, sql, params = jsonsql.logic_parse(input)
         self.assertTrue(result)
         self.assertEqual(sql, "col1 >= ?")
-        self.assertEqual(params, 10)
+        self.assertEqual(params, (10,))
 
     def test_valid_lte_condition(self):
         jsonsql = JsonSQL([], [], [], [], {'col1': int})
@@ -78,7 +78,7 @@ class TestLogicParse(unittest.TestCase):
         result, sql, params = jsonsql.logic_parse(input) 
         self.assertTrue(result)
         self.assertEqual(sql, "col1 <= ?") 
-        self.assertEqual(params, 10)
+        self.assertEqual(params, (10,))
 
     def test_valid_neq_condition(self):
         jsonsql = JsonSQL([], [], [], [], {'col1': int})
@@ -86,7 +86,7 @@ class TestLogicParse(unittest.TestCase):
         result, sql, params = jsonsql.logic_parse(input)
         self.assertTrue(result)
         self.assertEqual(sql, "col1 <> ?")
-        self.assertEqual(params, 10)
+        self.assertEqual(params, (10,))
 
     def test_invalid_operator(self):
         jsonsql = JsonSQL([], [], [], [], {'col1': int})
@@ -192,6 +192,22 @@ class TestSQLParse(unittest.TestCase):
         result, msg = jsonsql.sql_parse(input)
         self.assertFalse(result)
         self.assertEqual(msg, "Table not allowed - bad")
+
+    def test_valid_sql_no_logic(self):
+        jsonsql = JsonSQL(['SELECT'], ['*'], ['table1'], [], {})
+        input = {'query': 'SELECT', 'items': ['*'], 'table': 'table1'}
+        result, sql, params = jsonsql.sql_parse(input)
+        self.assertTrue(result)
+        self.assertEqual(sql, "SELECT * FROM table1")
+        self.assertEqual(params, ())
+
+    def test_valid_sql_with_logic(self):
+        jsonsql = JsonSQL(['SELECT'], ['*'], ['table1'], ['WHERE'], {"col1":int})
+        input = {'query': 'SELECT', 'items': ['*'], 'table': 'table1', 'connection': 'WHERE', 'logic': {'col1': {'<=': 2}}}
+        result, sql, params = jsonsql.sql_parse(input)
+        self.assertTrue(result)
+        self.assertEqual(sql, "SELECT * FROM table1 WHERE col1 <= ?")
+        self.assertEqual(params, (2,))
 
 
 if __name__ == "__main__":

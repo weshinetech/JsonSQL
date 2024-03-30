@@ -1,3 +1,5 @@
+from typing import Literal
+
 class JsonSQL():
     def __init__(self, allowed_queries: list=[], allowed_items: list=[], allowed_tables: list=[], allowed_connections: list=[], allowed_columns: dict={}):
         """Initializes JsonSQL instance with allowed queries, items, tables, 
@@ -20,10 +22,10 @@ class JsonSQL():
         self.COMPARISON = ("=", ">", "<", ">=", "<=", "<>","!=")
         self.SPECIAL_COMPARISON = ("BETWEEN", "IN")
 
-    def is_another_column(self, value:str):
+    def is_another_column(self, value:str) -> bool:
         return value in self.ALLOWED_COLUMNS
 
-    def is_special_comparison(self, comparator:str, value, valuetype):
+    def is_special_comparison(self, comparator:str, value: any, valuetype: any) -> bool:
         """Checks if a comparator and value match the special comparison operators.
     
         Special comparison operators include BETWEEN and IN. This checks if the 
@@ -65,7 +67,7 @@ class JsonSQL():
         
         return False
 
-    def is_valid_comparison(self, column:str, comparison:dict):
+    def is_valid_comparison(self, column:str, comparison:dict) -> bool:
         """Checks if a comparison operator and value are valid for a column.
         
         Validates that the comparator is a valid operator, and the value is the 
@@ -88,7 +90,7 @@ class JsonSQL():
             return True
         return False
 
-    def logic_parse(self, json_input: dict):
+    def logic_parse(self, json_input: dict) -> tuple[Literal[False], str] | tuple[Literal[True], str, tuple]:
         if len(json_input) == 0:
             return False, "Nothing To Compute"
         
@@ -111,7 +113,7 @@ class JsonSQL():
             
             comparator = list(json_input[value])[0]
             if comparator in self.COMPARISON and not self.is_another_column(json_input[value][comparator]):
-                return True, f"{value} {comparator if comparator != '!=' else '<>'} ?", json_input[value][comparator]
+                return True, f"{value} {comparator if comparator != '!=' else '<>'} ?", json_input[value][comparator] if isinstance(json_input[value][comparator], tuple) else (json_input[value][comparator],)
             
             elif comparator in self.COMPARISON and self.is_another_column(json_input[value][comparator]):
                 return True, f"{value} {comparator if comparator != '!=' else '<>'} {json_input[value][comparator]}", ()
@@ -121,7 +123,7 @@ class JsonSQL():
                     return True, f"{value} BETWEEN ? AND ?", tuple(json_input[value][comparator])
 
                 elif comparator == "IN":
-                    return True, f"{value} IN ({'?' if len(json_input[value][comparator]) == 1 else ('?,'*len(json_input[value][comparator]))[:-1]})", tuple(json_input[value][comparator])
+                    return True, f"{value} IN ({'?' if len(json_input[value][comparator]) == 1 else ('?,'*len(json_input[value][comparator]))[:-1]})", tuple(json_input[value][comparator]) if isinstance(json_input[value][comparator], tuple) else (json_input[value][comparator],)
 
             return False, f"Comparitor Error - {comparator}"
         
@@ -154,15 +156,13 @@ class JsonSQL():
 
             params = tuple(params)
 
-            if not isinstance(params,tuple):
-                params = (params,)
-
             data = f"({f" {value.upper()} ".join(output)})"
 
-            return True, data, params
+            return True, data, params if isinstance(params,tuple) else (params,)
+
         
-    def sql_parse(self, json_input: dict):
-        required_inputs: dict = {"query":str, "items":list, "connection":str, "table":str}
+    def sql_parse(self, json_input: dict) -> tuple[Literal[False],str] | tuple[Literal[True], str, tuple]:
+        required_inputs: dict = {"query":str, "items":list, "table":str}
         for item in required_inputs:
             if item not in json_input and item != "connection":
                 return False, f"Missing argument {item}"
@@ -179,7 +179,7 @@ class JsonSQL():
         if json_input["table"] not in self.ALLOWED_TABLES:
             return False, f"Table not allowed - {json_input['table']}"
         
-        if json_input["connection"] not in self.ALLOWED_CONNECTIONS:
+        if "connection" in json_input and json_input["connection"] not in self.ALLOWED_CONNECTIONS:
             return False, f"Connection not allowed - {json_input['connection']}"
         
         sql_string = f"{json_input["query"]} {",".join(json_input["items"])} FROM {json_input["table"]}"
@@ -189,6 +189,6 @@ class JsonSQL():
             if not logic_string[0]:
                 return False, f"Logic Fail - {logic_string[1]}"
             
-            return True, f"{sql_string} {json_input["connection"]} {logic_string[1]}", logic_string[2]
+            return True, f"{sql_string} {json_input["connection"]} {logic_string[1]}", logic_string[2] if isinstance(logic_string[2], tuple) else (logic_string[2],)
         
-        return sql_string
+        return True, sql_string, ()

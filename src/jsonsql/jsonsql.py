@@ -143,7 +143,7 @@ class JsonSQL():
             elif comparator in self.COMPARISON and self.is_another_column(json_input[value][comparator]):
                 return True, f"{value} {comparator if comparator != '!=' else '<>'} {json_input[value][comparator]}", ()
             
-            elif not self.is_valid_aggregate(json_input[value][comparator],self.ALLOWED_COLUMNS[value]):
+            elif comparator in self.AGGREGATES and not self.is_valid_aggregate(json_input[value][comparator],self.ALLOWED_COLUMNS[value]):
                 pass
 
             elif comparator in self.SPECIAL_COMPARISON:

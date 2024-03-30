@@ -28,6 +28,8 @@ request2 = {
     ]
 }
 
+request3 = {"creature": {"=": "owlbear"}}
+
 allowed_queries = [
     "SELECT"
 ]
@@ -57,3 +59,4 @@ jsonsql_ = JsonSQL(allowed_queries, allowed_items,
 
 print(jsonsql_.sql_parse(request))
 print(jsonsql_.logic_parse(request2))
+print(jsonsql_.logic_parse(request3))

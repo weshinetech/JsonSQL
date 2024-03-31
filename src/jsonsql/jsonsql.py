@@ -198,16 +198,16 @@ class JsonSQL():
                 return False, f"{item} not right type, {required_inputs[item]}"
             
         if json_input["query"] not in self.ALLOWED_QUERIES:
-            return False, f"Query not allowed - {json_input["query"]}"
+            return False, f"Query not allowed - {json_input['query']}"
 
         for item in range(len(json_input["items"])):
             if json_input["items"][item] not in self.ALLOWED_ITEMS and not (isinstance(json_input["items"][item], dict) and list(json_input["items"][item])[0] in self.AGGREGATES):
-                return False, f"Item not allowed - {json_input["items"][item]}"
+                return False, f"Item not allowed - {json_input['items'][item]}"
             elif isinstance(json_input["items"][item], dict) and list(json_input["items"][item])[0] in self.AGGREGATES:
                 if json_input["items"][item][list(json_input["items"][item])[0]] in self.ALLOWED_ITEMS:
                     json_input["items"][item] = f"{list(json_input["items"][item])[0]}({json_input["items"][item][list(json_input["items"][item])[0]]})"
                 else:
-                    return False, f"Item not allowed - {json_input["items"][item][list(json_input["items"][item])[0]]}"
+                    return False, f"Item not allowed - {json_input['items'][item][list(json_input['items'][item])[0]]}"
 
                
         if json_input["table"] not in self.ALLOWED_TABLES:
@@ -224,6 +224,6 @@ class JsonSQL():
             if not logic_string[0]:
                 return False, f"Logic Fail - {logic_string[1]}"
             
-            return True, f"{sql_string} {json_input["connection"]} {logic_string[1]}", logic_string[2] if isinstance(logic_string[2], tuple) else (logic_string[2],)
+            return True, f"{sql_string} {json_input['connection']} {logic_string[1]}", logic_string[2] if isinstance(logic_string[2], tuple) else (logic_string[2],)
         
         return True, sql_string, ()

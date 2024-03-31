@@ -35,7 +35,7 @@ request4 = {
     "items": [{"COUNT":"creature"}],
     "table": "images",
     "connection": "WHERE",
-    "logic": {"creature": {"=": "owlbear"}},
+    "logic": {"userID": {"=": {"MIN":"userID"}}},
 }
 
 allowed_queries = [

@@ -24,7 +24,7 @@ class JsonSQL():
         self.AGGREGATES = ("MIN", "MAX","SUM","AVG","COUNT")
 
     def make_aggregate(self, aggregate:dict, param:bool=False) -> tuple[str, any]:
-        return f"{list(aggregate)[0]}({aggregate[list(aggregate)[0]] if not param else "?"})", aggregate[list(aggregate)[0]]
+        return f"{list(aggregate)[0]}({aggregate[list(aggregate)[0]] if not param else '?'})", aggregate[list(aggregate)[0]]
 
     def is_another_column(self, value:str) -> bool:
         return value in self.ALLOWED_COLUMNS

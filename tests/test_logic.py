@@ -180,3 +180,12 @@ def test_valid_neq_condition_column(jsonsql: JsonSQL):
     assert result is True
     assert sql == "col1 <> col2"
     assert params == ()
+
+
+def test_valid_aggregate_condition_column(jsonsql: JsonSQL):
+    jsonsql.ALLOWED_COLUMNS = {"col1": int, "col2": int}
+    input = {"col1": {"=": {"MIN": "col2"}}}
+    result, sql, params = jsonsql.logic_parse(input)
+    assert result is True
+    assert sql == "col1 = MIN(col2)"
+    assert params == ()

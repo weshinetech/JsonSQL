@@ -27,9 +27,12 @@ class JsonSQL():
         return f"{list(aggregate)[0]}({aggregate[list(aggregate)[0]] if not param else '?'})", aggregate[list(aggregate)[0]]
 
     def is_another_column(self, value:str) -> bool:
-        return value in self.ALLOWED_COLUMNS
+        try:
+            return value in self.ALLOWED_COLUMNS
+        except TypeError:
+            return False
     
-    def is_valid_aggregate(self, aggregate:dict, valuetype:any) -> bool:
+    def is_valid_aggregate(self, aggregate:dict) -> bool:
         if not isinstance(aggregate, dict):
             return False
         
@@ -38,14 +41,11 @@ class JsonSQL():
         if operation not in self.AGGREGATES:
             return False
         
-        if not self.is_another_column(value) and not isinstance(value,valuetype):
-            return False
-        
-        return True
+        return self.is_another_column(value)
     
     def is_valid_value(self, value:any, valuetype:any) -> bool:
         if isinstance(value, dict):
-            return self.is_valid_aggregate(value,valuetype)
+            return self.is_valid_aggregate(value)
         elif not isinstance(value, list) and self.is_another_column(value):
             return True
         return isinstance(value, valuetype)
@@ -135,16 +135,15 @@ class JsonSQL():
             return False, f"Bad {value}, non {self.ALLOWED_COLUMNS[value]}"
 
         if self.is_valid_comparison(value, json_input[value]):
-            
             comparator = list(json_input[value])[0]
-            if comparator in self.COMPARISON and not self.is_another_column(json_input[value][comparator]):
+            if comparator in self.COMPARISON and not self.is_another_column(json_input[value][comparator]) and not isinstance(json_input[value][comparator],dict):
                 return True, f"{value} {comparator if comparator != '!=' else '<>'} ?", json_input[value][comparator] if isinstance(json_input[value][comparator], tuple) else (json_input[value][comparator],)
 
             elif comparator in self.COMPARISON and self.is_another_column(json_input[value][comparator]):
                 return True, f"{value} {comparator if comparator != '!=' else '<>'} {json_input[value][comparator]}", ()
             
-            elif comparator in self.AGGREGATES and not self.is_valid_aggregate(json_input[value][comparator],self.ALLOWED_COLUMNS[value]):
-                pass
+            elif list(json_input[value][comparator])[0] in self.AGGREGATES:
+                return True, f"{value} {comparator if comparator != '!=' else '<>'} {list(json_input[value][comparator])[0]}({json_input[value][comparator][list(json_input[value][comparator])[0]]})", ()
 
             elif comparator in self.SPECIAL_COMPARISON:
                 if comparator == "BETWEEN":

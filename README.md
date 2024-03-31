@@ -79,6 +79,8 @@ All arguments to JsonSQL like allowed_queries, allowed_columns etc. are optional
 
 ### Current operations supported by the logic
 
+Note: variables do mean columns in the way i am using them
+
 ```json
 {
   "AND":[],
@@ -93,4 +95,10 @@ values can also be valid variables such that `variable1 = variable2`
 
 ```json
 {"variable":{"=":"othervariable"}}
+```
+
+SQL aggregations can also be used
+
+```json
+{"variable":{"=":{"MIN":"variable"}}}
 ```

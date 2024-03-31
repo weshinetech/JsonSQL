@@ -205,7 +205,7 @@ class JsonSQL():
                 return False, f"Item not allowed - {json_input['items'][item]}"
             elif isinstance(json_input["items"][item], dict) and list(json_input["items"][item])[0] in self.AGGREGATES:
                 if json_input["items"][item][list(json_input["items"][item])[0]] in self.ALLOWED_ITEMS:
-                    json_input["items"][item] = f"{list(json_input["items"][item])[0]}({json_input["items"][item][list(json_input["items"][item])[0]]})"
+                    json_input["items"][item] = f"{list(json_input['items'][item])[0]}({json_input['items'][item][list(json_input['items'][item])[0]]})"
                 else:
                     return False, f"Item not allowed - {json_input['items'][item][list(json_input['items'][item])[0]]}"
 

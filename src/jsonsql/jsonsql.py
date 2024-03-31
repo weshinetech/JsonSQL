@@ -217,7 +217,7 @@ class JsonSQL():
         if "connection" in json_input and json_input["connection"] not in self.ALLOWED_CONNECTIONS:
             return False, f"Connection not allowed - {json_input['connection']}"
         
-        sql_string = f"{json_input["query"]} {",".join(json_input["items"])} FROM {json_input["table"]}"
+        sql_string = f"{json_input['query']} {','.join(json_input['items'])} FROM {json_input['table']}"
 
         if "logic" in json_input:
             logic_string = self.logic_parse(json_input["logic"])

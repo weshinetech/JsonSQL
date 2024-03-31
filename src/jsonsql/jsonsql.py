@@ -184,7 +184,7 @@ class JsonSQL():
 
             params = tuple(params)
 
-            data = f"({f" {value.upper()} ".join(output)})"
+            data = f"({f' {value.upper()} '.join(output)})"
 
             return True, data, params if isinstance(params,tuple) else (params,)
 
